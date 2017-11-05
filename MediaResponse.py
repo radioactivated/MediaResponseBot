@@ -48,7 +48,7 @@ class StdOutListener(StreamListener):
             print(status.author.id_str)
             ser.write('twote\n'.encode())
             print(status.text)
-           # call(["espeak",status.text])
+            call(["espeak",status.text])
         
 
     def on_error(self, status):
