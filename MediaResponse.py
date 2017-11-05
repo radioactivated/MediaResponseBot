@@ -2,11 +2,13 @@ import time
 import serial
 import RPi.GPIO as GPIO
 import tweepy
+import string
+import re
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
 from subprocess import call
-
+from urllib3.exceptions import ProtocolError
 debounce = False
 
 
@@ -46,9 +48,14 @@ class StdOutListener(StreamListener):
         
         if status.author.id_str in users:
             print(status.author.id_str)
+            text = status.text
+            text = text.replace("&amp;","&") # replace ampersands so it's read correctly
+            text = text.replace("&quot;",'"')
+            text = text.replace("&apos;","'")
+            text = re.sub(r'https?:\/\/*.*\/*','',text)
             ser.write('twote\n'.encode())
-            print(status.text)
-            call(["espeak",status.text])
+            print(text)
+            call(["espeak",text])
         
 
     def on_error(self, status):
@@ -85,12 +92,12 @@ if __name__ == '__main__':
     print(user_names)
     
     stream = Stream(auth, l)
-    stream.filter(follow=users,track="")
-
 while True:
     try:
-        rcv = ser.readline()
-        print(rcv)
+        stream.filter(follow=users,track="")
+    except ProtocolError:
+        print("oops")
+        continue
     except KeyboardInterrupt:
         break
 
